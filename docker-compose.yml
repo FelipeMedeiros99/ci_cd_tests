@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15
+    container_name: db
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5431:5432"
+    networks:
+      - ci_cd_test
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prisma -d postgres"]
+      interval: 5s
+      timeout: 2s
+      retries: 20
+
+  ci_cd_test:
+    image: ci_cd_test
+    container_name: ci_cd_test
+    build: .
+    ports:
+      - "5000:5000"
+    networks:
+      - ci_cd_test
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+networks:
+  ci_cd_test:
+    driver: bridge
+  
+volumes:
+  postgres_data:
